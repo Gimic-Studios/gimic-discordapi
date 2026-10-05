@@ -1,3 +1,5 @@
 # gimic-discordapi
 
-(https://docs.gimic.cc)
+- Docs: https://docs.gimic.cc
+- Discord: https://discord.gg/gimic
+- Store: https://store.gimic.cc
