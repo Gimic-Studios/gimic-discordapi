@@ -7,8 +7,19 @@ local Discord <const> = {
     }
 }
 
-local function log(message, ...)
-    print(format('^7[^2GIMIC^7] ^5DISCORD^7: ^0%s^7', format(message, ...)))
+-- same console style as the other Gimic resources: the name in the brand orange, the message in white
+local PREFIX <const> = ('\27[38;2;255;122;24m[%s]\27[0m'):format(GetCurrentResourceName())
+
+local function write(tag, message, ...)
+    print(format('%s %s %s^7', PREFIX, tag, format(message, ...)))
+end
+
+local function info(message, ...)
+    write('^7[INFO]', message, ...)
+end
+
+local function fail(message, ...)
+    write('^1[ERROR]', message, ...)
 end
 
 local function trim(str)
@@ -188,16 +199,14 @@ RegisterNetEvent('gimic-discordapi:playerConnected', function()
     Players.pending[playerId] = nil
 
     if not discordData then
-        local playerName = GetPlayerName(playerId)
-        log('^7[^2PLAYER JOINED^7] ^5%s^7 (^3ID: ^3%s^7) - ^1No Discord^7', playerName, playerId)
+        if Config.logConnections then info('%s (id %s) joined without Discord linked', GetPlayerName(playerId), playerId) end
         return
     end
 
     Players.cache[playerId] = discordData
 
     if Config.logConnections then
-        local playerName = GetPlayerName(playerId)
-        log('^7[^2PLAYER JOINED^7] ^5%s^7 (^3ID: ^3%s^7) - ^2Discord: ^7%s', playerName, playerId, discordData.username)
+        info('%s (id %s) joined, Discord %s', GetPlayerName(playerId), playerId, discordData.username)
     end
 end)
 
@@ -215,20 +224,20 @@ AddEventHandler('onResourceStart', function(resourceName)
     if GetCurrentResourceName() ~= resourceName then return end
 
     if not Config.botToken or trim(Config.botToken) == '' then
-        return log('^1Invalid Discord bot token in Configuration^0')
+        return fail('the bot token in config.lua is empty')
     end
 
     if not Config.guildId or trim(Config.guildId) == '' then
-        return log('^1Invalid Discord guild ID in Configuration^0')
+        return fail('the guild id in config.lua is empty')
     end
 
     local guildInfo = Citizen.Await(Discord.getGuildInfo(Config.guildId))
     if not guildInfo or not guildInfo.name then
-        return log('^1Failed to authenticate with Discord. Please verify your Configuration^0')
+        return fail('could not reach your Discord server, check the bot token and guild id in config.lua')
     end
 
     local guildName = trim(guildInfo.name:gsub('[%c%z]', ''))
-    log('^2[LINKED]^0: ^5%s^0 (%s)', guildName, Config.guildId)
+    info('linked to %s (%s)', guildName, Config.guildId)
 end)
 
 exports('getPlayerRoles', function(playerId) return Players.getCachedData(playerId, 'roles') end)
